@@ -1,13 +1,13 @@
-package com.briefly.projectbrefly;
+package com.briefly.backenddesign;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProjectBreflyApplication {
+public class BackEndDesignApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ProjectBreflyApplication.class, args);
+		SpringApplication.run(BackEndDesignApplication.class, args);
 	}
 
 }
