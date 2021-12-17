@@ -1,41 +1,40 @@
 package com.briefly.backenddesign.controller;
 
-import com.briefly.backenddesign.model.Url;
-import com.briefly.backenddesign.repository.UrlRepository;
+import com.briefly.backenddesign.db.entity.LongToShortUrl;
+import com.briefly.backenddesign.db.repository.LongToShortUrlRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/url")
 public class UrlController {
     @Autowired
-    private UrlRepository urlRepository;
+    private LongToShortUrlRepository urlRepository;
     @GetMapping
-    public List<Url> getAllUrl(){
+    public List<LongToShortUrl> getAllUrl(){
         return urlRepository.findAll();
     }
 
     @PostMapping
-    public Url createUrl(@RequestBody Url url){
+    public LongToShortUrl createUrl(@RequestBody LongToShortUrl url){
         return urlRepository.save(url);
     }
 
-    // build get employee by id REST API
+    // build get Url by id REST API
     @GetMapping("{id}")
-    public ResponseEntity<Url> getUrlById(@PathVariable  long id){
-        Url url = urlRepository.findById(id).orElseThrow();
+    public ResponseEntity<LongToShortUrl> getUrlById(@PathVariable  long id){
+        LongToShortUrl url = urlRepository.findById(id).orElseThrow();
         return ResponseEntity.ok(url);
     }
 
-    // build update employee REST API
+    // build update Url REST API
     @PutMapping("{id}")
-    public ResponseEntity<Url> updateUrl(@PathVariable long id,@RequestBody Url urlDetails) {
-        Url updateUrl = urlRepository.findById(id).orElseThrow();
+    public ResponseEntity<LongToShortUrl> updateUrl(@PathVariable long id, @RequestBody LongToShortUrl urlDetails) {
+        LongToShortUrl updateUrl = urlRepository.findById(id).orElseThrow();
 
         updateUrl.setLongUrl(urlDetails.getLongUrl());
         urlRepository.save(updateUrl);
@@ -45,11 +44,11 @@ public class UrlController {
 
 
 
-    // build delete employee REST API
+    // build delete Url REST API
     @DeleteMapping("{id}")
     public ResponseEntity<HttpStatus> deleteEmployee(@PathVariable long id){
 
-        Url employee = urlRepository.findById(id).orElseThrow();
+        LongToShortUrl employee = urlRepository.findById(id).orElseThrow();
 
         urlRepository.delete(employee);
 
