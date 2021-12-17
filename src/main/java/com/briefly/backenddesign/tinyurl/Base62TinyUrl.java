@@ -24,7 +24,7 @@ public class Base62TinyUrl {
         return id;
     }
 
-    public static  String generate(long id, int length) {
+    public static String generate(long id, int length) {
         String short_url = "";
         int index = -1;
 

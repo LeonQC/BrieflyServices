@@ -1,5 +1,7 @@
 package com.briefly.backenddesign.controller;
 
+import com.briefly.backenddesign.db.entity.LongToShortUrl;
+import com.briefly.backenddesign.db.repository.LongToShortUrlRepository;
 import com.briefly.backenddesign.service.ILongToShortService;
 import com.briefly.backenddesign.service.LongToShortService;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
+
 /**
  * @auther: WZ
  * @Date: 2020/9/7 14:59
@@ -21,8 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 @Api
 @CrossOrigin
 public class LongToShortController {
-    private TinyUrlGenerator tinyUrlGenerator = new TinyUrlGenerator();
-    private ILongToShortService longToShortService = new LongToShortService(tinyUrlGenerator);
+    @Autowired
+    private ILongToShortService longToShortService;
+
+
 
     /**
      * transform接口
