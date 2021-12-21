@@ -12,14 +12,15 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
-@Table(name="urls")
+@Table(name="LONG_TO_SHORT")
 public class LongToShortUrl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name="long_Url")
+
     public String longUrl;
-    @Column(name="short_Url")
+
     public String shortUrl;
 }

@@ -11,19 +11,20 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/url")
+@CrossOrigin
 public class UrlController {
     @Autowired
-    private LongToShortUrlRepository urlRepository;
-    @GetMapping
+    private LongToShortUrlRepository longToShortUrlRepository;
+    @GetMapping("/getAll")
     public List<LongToShortUrl> getAllUrl(){
-        return urlRepository.findAll();
+        return longToShortUrlRepository.findAll();
     }
 
     @PostMapping
     public LongToShortUrl createUrl(@RequestBody LongToShortUrl url){
-        return urlRepository.save(url);
+        return longToShortUrlRepository.save(url);
     }
-
+ /*
     // build get Url by id REST API
     @GetMapping("{id}")
     public ResponseEntity<LongToShortUrl> getUrlById(@PathVariable  long id){
@@ -42,18 +43,20 @@ public class UrlController {
         return ResponseEntity.ok(updateUrl);
     }
 
-
+   */
 
     // build delete Url REST API
-    @DeleteMapping("{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<HttpStatus> deleteEmployee(@PathVariable long id){
 
-        LongToShortUrl employee = urlRepository.findById(id).orElseThrow();
+        LongToShortUrl employee = longToShortUrlRepository.findById(id).orElseThrow(null);
 
-        urlRepository.delete(employee);
+        longToShortUrlRepository.delete(employee);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
     }
+
+
 
 }
