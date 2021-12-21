@@ -44,6 +44,7 @@ public class LongToShortService implements ILongToShortService {
     String shortUrl = fetchNextAvailableShortUrl();
     urlVo = createUrlVO(shortUrl);
     SaveUrl(longUrl, shortUrl);
+
     return urlVo;
   }
 
