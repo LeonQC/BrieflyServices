@@ -1,0 +1,39 @@
+package com.briefly.backenddesign.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+@Configuration
+@EnableSwagger2
+@EnableWebMvc
+public class SwaggerConfig {
+
+    @Bean
+    public Docket webApiConfig() {
+
+        return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("webApi")
+                .apiInfo(webApiInfo())
+                .select()
+                .build();
+    }
+
+    // 基本信息的配置，信息会在api文档上显示
+    private ApiInfo webApiInfo() {
+
+        return new ApiInfoBuilder()
+                .title("短网址")
+                .description("本文档描述了短网址中接口定义")
+                .version("1.0")
+                .contact(new Contact("Helen", "http://wenzhen.com", "649575218@qq.com"))
+                .build();
+    }
+}
+
