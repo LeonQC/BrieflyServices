@@ -1,2 +1,1 @@
-# BrieflyServices
-Briefly the best URL shortener, backend services
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

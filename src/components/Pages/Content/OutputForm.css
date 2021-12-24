@@ -1,0 +1,36 @@
+#goals {
+  width: 66rem;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1rem;
+  border-radius: 9px;
+}
+
+#goal-form {
+  width: 70rem;
+  max-width: 90%;
+  margin: 3rem auto 0 auto;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+  @media only screen and (min-width: 1200px) {
+    .content__blog__container {
+      width: 100%;
+    }
+  }
+  
+  @media only screen and (min-width: 1024px) {
+    .cards__items {
+      display: flex;
+    }
+  }
+  
+  @media only screen and (max-width: 1024px) {
+    .cards__item {
+      margin-bottom: 2rem;
+    }
+  }
+  
