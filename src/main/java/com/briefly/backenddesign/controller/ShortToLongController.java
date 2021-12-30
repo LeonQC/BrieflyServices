@@ -37,7 +37,7 @@ public class ShortToLongController {
      * @param response
      * @throws IOException
      */
-    @RequestMapping("/request")
+    @RequestMapping("/{shortUrl}")
     public void redirect(@PathVariable String shortUrl, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String longUrl = longToShortService.shortToLong(shortUrl); //longToShortService.shortToLong(shortUrl, request);
         System.out.println(longUrl);

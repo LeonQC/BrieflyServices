@@ -92,11 +92,27 @@ public class LongToShortService implements ILongToShortService {
 
   @Override
   public String shortToLong(String shortUrl) {
-    String longUrl = null;
-    Optional<LongToShortUrl> longUrlOptional = longToShortUrlRepository.findByShortUrl(shortUrl);
-    if(longUrlOptional.isPresent()) {
-      longUrl = longUrlOptional.get().getLongUrl();
+    String longUrl = fetchLongUrl(shortUrl);
+    return longUrl;
+  }
+
+
+  private String fetchLongUrl(String shortUrl) {
+    String longUrl = (String) redisService.get(shortUrl);
+    redisService.expire(shortUrl, 60);
+    if (!StringUtils.isEmpty(longUrl)) {
+      return longUrl;
     }
+    
+    Optional<LongToShortUrl> longUrlOptional = longToShortUrlRepository.findByShortUrl(shortUrl);
+
+    if (longUrlOptional.isPresent()) {
+      longUrl = longUrlOptional.get().getLongUrl();
+      redisService.set(shortUrl, longUrl, 60);
+    } else {
+      longUrl = null;
+    }
+
     return longUrl;
   }
 
