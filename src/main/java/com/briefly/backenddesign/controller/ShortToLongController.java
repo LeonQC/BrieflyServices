@@ -45,7 +45,7 @@ public class ShortToLongController {
             throw new NoSuchElementException("Cannot find long URL mapping to " + shortUrl);
         } else {
             response.sendRedirect(longUrl);
-        }
+
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)

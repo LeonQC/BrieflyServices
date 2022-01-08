@@ -23,6 +23,7 @@ public class LongToShortService implements ILongToShortService {
   private final TinyUrlGenerator tinyUrlGenerator;
   private final LongToShortUrlRepository longToShortUrlRepository;
   private final RedisService redisService;
+
   private long counter;
   @Autowired
   public LongToShortService(
@@ -31,9 +32,11 @@ public class LongToShortService implements ILongToShortService {
           TinyUrlGenerator tinyUrlGenerator) {
             this.longToShortUrlRepository = longToShortUrlRepository;
             this.redisService = redisService;
+
             this.tinyUrlGenerator = tinyUrlGenerator;
             this.counter = 0L;
           }
+
 
   @Transactional
   public UrlVO longToShort(String longUrl, HttpServletRequest request) {
@@ -64,6 +67,7 @@ public class LongToShortService implements ILongToShortService {
   }
 
 
+
   @Override
   public UrlVO longToShort(String longUrl) {
     if (!UrlUtil.isValidLongUrl(longUrl)) {
@@ -84,6 +88,7 @@ public class LongToShortService implements ILongToShortService {
     String shortUrl = fetchNextAvailableShortUrl();
 
     redisService.setLongAndShort(longUrl, shortUrl, DEFAULT_CACHE_TTL);
+
     urlVo = createUrlVO(shortUrl);
     SaveUrl(longUrl, shortUrl);
 
@@ -154,7 +159,6 @@ public class LongToShortService implements ILongToShortService {
     return urlVo;
   }
 
-
   private void SaveUrl(String longUrl, String shortUrl){
     LongToShortUrl url = new LongToShortUrl();
     url.setLongUrl(longUrl);
@@ -175,7 +179,7 @@ public class LongToShortService implements ILongToShortService {
   }
 
 
-  private UrlVO fetchTinyUrlFromCache(String url) {
+<<<<<<< HEAD  private UrlVO fetchTinyUrlFromCache(String url) {
     UrlVO urlVo = null;
 
     String shortExist = fetchValueByKey(url);
