@@ -1,6 +1,5 @@
 package com.briefly.backenddesign.controller;
 
-
 import com.briefly.backenddesign.annotation.RateLimit;
 import com.briefly.backenddesign.db.entity.LongToShortUrl;
 import com.briefly.backenddesign.db.repository.LongToShortUrlRepository;
@@ -40,10 +39,17 @@ public class LongToShortController {
      * @param request
      * @return json：{"url" : "http://www.baidu.com"}
      */
-
     @RateLimit(permitsPerSecond = 0.1, period = 1, permits = 1, limitType = LimitType.IP)
     @PostMapping("/transform")
     public UrlVO longTransfer(@RequestBody UrlVO urlVo, HttpServletRequest request) {
+        String Url = urlVo.getUrl();
+        UrlVO longToShort = longToShortService.longToShort(Url, request);
+        //return Result.ofSuccess(longToShort).setCode(200);
+        return longToShort;
+    }
+
+    @PostMapping("/transformId")
+    public UrlVO longTransfer(@RequestBody UrlVO urlVo) {
         String Url = urlVo.getUrl();
         UrlVO longToShort = longToShortService.longToShort(Url); //longToShortService.longToShort(Url, request);
         //return Result.ofSuccess(longToShort).setCode(200);

@@ -1,18 +1,24 @@
 package com.briefly.backenddesign.service;
+import com.briefly.backenddesign.db.entity.LongToSequenceId;
 import com.briefly.backenddesign.db.entity.LongToShortUrl;
+import com.briefly.backenddesign.db.repository.LongToSequenceIdRepository;
 import com.briefly.backenddesign.tinyurl.TinyUrlGenerator;
 import com.briefly.backenddesign.utils.UrlUtil;
 import com.briefly.backenddesign.vo.UrlVO;
 import com.briefly.backenddesign.db.repository.LongToShortUrlRepository;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.Optional;
+
+
 
 
 @Service
@@ -23,20 +29,26 @@ public class LongToShortService implements ILongToShortService {
   private final TinyUrlGenerator tinyUrlGenerator;
   private final LongToShortUrlRepository longToShortUrlRepository;
   private final RedisService redisService;
+  private final LongToSequenceIdRepository longToSequenceIdRepository;
+  private final SequenceIdService sequenceIdService;
 
-  private long counter;
+
+  @Value("${shorturl.prefix}")
+  private String shortUrlPrefix;
+
   @Autowired
   public LongToShortService(
           LongToShortUrlRepository longToShortUrlRepository,
+          LongToSequenceIdRepository longToSequenceIdRepository,
+          SequenceIdService sequenceIdService,
           RedisService redisService,
           TinyUrlGenerator tinyUrlGenerator) {
             this.longToShortUrlRepository = longToShortUrlRepository;
+            this.longToSequenceIdRepository = longToSequenceIdRepository;
+            this.sequenceIdService = sequenceIdService;
             this.redisService = redisService;
-
             this.tinyUrlGenerator = tinyUrlGenerator;
-            this.counter = 0L;
           }
-
 
   @Transactional
   public UrlVO longToShort(String longUrl, HttpServletRequest request) {
@@ -62,14 +74,13 @@ public class LongToShortService implements ILongToShortService {
 
     SaveUrl(longUrl, shortUrl);
     urlVo = createUrlVO(shortUrl);
-
     return urlVo;
   }
 
 
-
   @Override
   public UrlVO longToShort(String longUrl) {
+    /*
     if (!UrlUtil.isValidLongUrl(longUrl)) {
       logger.error("Invalid long URL");
       return null;
@@ -88,38 +99,50 @@ public class LongToShortService implements ILongToShortService {
     String shortUrl = fetchNextAvailableShortUrl();
 
     redisService.setLongAndShort(longUrl, shortUrl, DEFAULT_CACHE_TTL);
-
     urlVo = createUrlVO(shortUrl);
     SaveUrl(longUrl, shortUrl);
+     */
 
+    if (!UrlUtil.isValidLongUrl(longUrl)) {
+      logger.error("Invalid long URL");
+      return null;
+    }
+
+    String sequenceIdStr = fetchValueByKey(longUrl);
+    if (NumberUtils.isDigits(sequenceIdStr)) {
+      Long sequenceId = NumberUtils.createLong(sequenceIdStr);
+      if (sequenceId != null) {
+        return convertSequenceIdToShortKey(sequenceId);
+      }
+    }
+
+    if (StringUtils.isNotBlank(sequenceIdStr)) {
+      return createUrlVO(sequenceIdStr);
+    }
+
+    Optional<LongToSequenceId> longToSequenceIdOpt =
+            longToSequenceIdRepository.findByLongUrl(longUrl);
+    if (longToSequenceIdOpt.isPresent()) {
+      return postProcessDataFromDB(longToSequenceIdOpt.get());
+    }
+
+    Long nextGlobalSequenceId = sequenceIdService.getNextSequenceByKeyGenerator();
+    UrlVO urlVO = convertSequenceIdToShortKey(nextGlobalSequenceId);
+
+    redisService.setLongAndShort(longUrl, nextGlobalSequenceId.toString(), DEFAULT_CACHE_TTL);
+
+    persistLongToSequenceId(longUrl, nextGlobalSequenceId.toString());
+
+    return urlVO;
+  }
+
+  private UrlVO convertSequenceIdToShortKey(Long sequenceId) {
+    String shortKey = tinyUrlGenerator.generate(sequenceId);
+    UrlVO urlVo = createUrlVO(shortKey);
     return urlVo;
   }
 
-  @Override
-  public String shortToLong(String shortUrl) {
-    String longUrl = fetchLongUrl(shortUrl);
-    return longUrl;
-  }
 
-
-  private String fetchLongUrl(String shortUrl) {
-    String longUrl = (String) redisService.get(shortUrl);
-    redisService.expire(shortUrl, 60);
-    if (!StringUtils.isEmpty(longUrl)) {
-      return longUrl;
-    }
-    
-    Optional<LongToShortUrl> longUrlOptional = longToShortUrlRepository.findByShortUrl(shortUrl);
-
-    if (longUrlOptional.isPresent()) {
-      longUrl = longUrlOptional.get().getLongUrl();
-      redisService.set(shortUrl, longUrl, 60);
-    } else {
-      longUrl = null;
-    }
-
-    return longUrl;
-  }
 
 
   private String fetchNextAvailableShortUrl() {
@@ -138,7 +161,7 @@ public class LongToShortService implements ILongToShortService {
     return shortUrl;
   }
 
-
+  /*
   private UrlVO fetchUrlFromDb(String longUrl) {
       UrlVO urlVo = null;
       Optional<LongToShortUrl> longUrlOptional = longToShortUrlRepository.findByLongUrl(longUrl);
@@ -148,6 +171,18 @@ public class LongToShortService implements ILongToShortService {
         urlVo = createUrlVO(shortExist);
       }
       return urlVo;
+  }
+  */
+
+  private UrlVO postProcessDataFromDB(LongToSequenceId longToSequenceId) {
+    String longUrlMeta = longToSequenceId.getLongUrl();
+    Long sequenceIdMeta = longToSequenceId.getSequenceId();
+
+    redisService.setLongAndShort(longUrlMeta, sequenceIdMeta.toString(), DEFAULT_CACHE_TTL);
+
+    UrlVO urlVo = convertSequenceIdToShortKey(sequenceIdMeta);
+
+    return urlVo;
   }
 
   private UrlVO postProcessDataFromDB(LongToShortUrl longToShortData) {
@@ -159,11 +194,20 @@ public class LongToShortService implements ILongToShortService {
     return urlVo;
   }
 
+
   private void SaveUrl(String longUrl, String shortUrl){
     LongToShortUrl url = new LongToShortUrl();
     url.setLongUrl(longUrl);
     url.setShortUrl(shortUrl);
     longToShortUrlRepository.save(url);
+  }
+
+
+  public void persistLongToSequenceId(String longUrl, String sequenceIdStr) {
+    LongToSequenceId longToSequenceId = new LongToSequenceId();
+    longToSequenceId.setLongUrl(longUrl);
+    longToSequenceId.setSequenceId(NumberUtils.createLong(sequenceIdStr));
+    longToSequenceIdRepository.save(longToSequenceId);
   }
 
 
@@ -175,11 +219,11 @@ public class LongToShortService implements ILongToShortService {
   }
 
   private String constructTinyUrl(String shortExist) {
-    return "http://brieflyUrl/" + shortExist;
+    return shortUrlPrefix + shortExist;
   }
 
 
-<<<<<<< HEAD  private UrlVO fetchTinyUrlFromCache(String url) {
+  private UrlVO fetchTinyUrlFromCache(String url) {
     UrlVO urlVo = null;
 
     String shortExist = fetchValueByKey(url);
@@ -196,6 +240,64 @@ public class LongToShortService implements ILongToShortService {
     String value = (String) redisService.get(key);
     redisService.expire(key, DEFAULT_CACHE_TTL);
     return value;
+  }
+
+  /**
+   * 短网址转长网址
+   *
+   * @param shortUrl
+   * @return
+   */
+
+  public String shortToLong(String shortUrl, HttpServletRequest request) {
+    String longUrl = fetchLongUrl(shortUrl);
+    return longUrl;
+  }
+
+  @Override
+  public String shortToLong(String shortUrl) {
+    String longUrl = fetchLongUrl(shortUrl);
+    return longUrl;
+  }
+
+
+  private String fetchLongUrl(String shortUrl) {
+    String longUrl = (String) redisService.get(shortUrl);
+    redisService.expire(shortUrl, 60);
+    if (!StringUtils.isEmpty(longUrl)) {
+      return longUrl;
+    }
+
+    Optional<LongToShortUrl> longUrlOptional = longToShortUrlRepository.findByShortUrl(shortUrl);
+
+    if (longUrlOptional.isPresent()) {
+      longUrl = longUrlOptional.get().getLongUrl();
+      redisService.set(shortUrl, longUrl, 60);
+    } else {
+      longUrl = null;
+    }
+
+    return longUrl;
+  }
+
+  private String fetchLongUrl(Long sequenceId) {
+    String longUrl = (String) redisService.get(sequenceId.toString());
+    redisService.expire(sequenceId.toString(), 60);
+    if (!StringUtils.isEmpty(longUrl)) {
+      return longUrl;
+    }
+
+    Optional<LongToSequenceId> longToSequenceIdOpt =
+            longToSequenceIdRepository.findBySequenceId(sequenceId);
+
+    if (longToSequenceIdOpt.isPresent()) {
+      longUrl = longToSequenceIdOpt.get().getLongUrl();
+      redisService.set(sequenceId.toString(), longUrl, 60);
+    } else {
+      longUrl = null;
+    }
+
+    return longUrl;
   }
 
 }
