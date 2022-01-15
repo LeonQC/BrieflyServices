@@ -19,7 +19,7 @@ import java.util.NoSuchElementException;
  * @Description: 短网址处理重定向
  */
 @Controller
-@RequestMapping("/url")
+@RequestMapping("/briefly")
 @Api
 @CrossOrigin
 public class ShortToLongController {
@@ -37,14 +37,14 @@ public class ShortToLongController {
      * @param response
      * @throws IOException
      */
-    @RequestMapping("/request")
+    @RequestMapping("/{shortUrl}")
     public void redirect(@PathVariable String shortUrl, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String longUrl = longToShortService.shortToLong(shortUrl); //longToShortService.shortToLong(shortUrl, request);
+        System.out.println(longUrl);
         if (longUrl == null) {
             throw new NoSuchElementException("Cannot find long URL mapping to " + shortUrl);
         } else {
             response.sendRedirect(longUrl);
-            System.out.println(longUrl);
         }
     }
 
